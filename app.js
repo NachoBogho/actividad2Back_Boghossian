@@ -1,63 +1,65 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 
 class ProductManager {
   constructor(filePath) {
     this.path = filePath;
-    this.products = [];
-    this.loadProducts();
+    this.products = null;
   }
 
-  loadProducts() {
+  loadProducts = async () => {
     try {
-      const data = fs.readFileSync(this.path, 'utf-8');
+      const data = await fs.readFile(this.path, 'utf-8');
       this.products = JSON.parse(data);
     } catch (error) {
-
       this.products = [];
     }
   }
 
-  saveProducts() {
-    fs.writeFileSync(this.path, JSON.stringify(this.products, null, 2), 'utf-8');
+  saveProducts = async () => {
+    await fs.writeFile(this.path, JSON.stringify(this.products, null, 2), 'utf-8');
   }
 
-  addProduct(product) {
+  addProduct = async (product) => {
+    await this.loadProducts();
 
     const lastId = this.products.length > 0 ? this.products[this.products.length - 1].id : 0;
     product.id = lastId + 1;
 
-
     this.products.push(product);
-    this.saveProducts();
+    await this.saveProducts();
   }
 
-  getProducts() {
+  getProducts = async () => {
+    await this.loadProducts();
     return this.products;
   }
 
-  getProductById(id) {
+  getProductById = async (id) => {
+    await this.loadProducts();
     const product = this.products.find((p) => p.id === id);
     return product || null;
   }
 
-  updateProduct(id, updatedProduct) {
+  updateProduct = async (id, updatedProduct) => {
+    await this.loadProducts();
+
     const index = this.products.findIndex((p) => p.id === id);
     if (index !== -1) {
-
       updatedProduct.id = this.products[index].id;
       this.products[index] = updatedProduct;
-      this.saveProducts();
+      await this.saveProducts();
       return true;
     }
     return false;
   }
 
-  deleteProduct(id) {
+  deleteProduct = async (id) => {
+    await this.loadProducts();
+
     const index = this.products.findIndex((p) => p.id === id);
     if (index !== -1) {
-
       this.products.splice(index, 1);
-      this.saveProducts();
+      await this.saveProducts();
       return true;
     }
     return false;
